@@ -12,6 +12,7 @@ import org.springframework.batch.item.file.FlatFileParseException;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.transform.IncorrectTokenCountException;
+import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -22,6 +23,7 @@ import p76.data.etl.teryt.entity.Teryt;
 import p76.data.etl.teryt.entity.Ulic;
 
 import javax.persistence.EntityManagerFactory;
+import java.util.Collections;
 
 @Configuration
 @EnableBatchProcessing
@@ -48,6 +50,8 @@ public class TerytBatchConfiguration {
                         "nazwa1", "nazwa2", "stanNa" })
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<Ulic>() {{
                     setTargetType(Ulic.class);
+                    setCustomEditors(Collections.singletonMap(String.class,
+                            new StringTrimmerEditor(true)));
                 }})
                 .build();
     }
@@ -63,6 +67,8 @@ public class TerytBatchConfiguration {
                 .names(new String[]{"woj", "pow", "gmi", "rodz", "nazwa", "nazwaDod", "stanNa" })
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<Terc>() {{
                     setTargetType(Terc.class);
+                    setCustomEditors(Collections.singletonMap(String.class,
+                            new StringTrimmerEditor(true)));
                 }})
                 .build();
     }
@@ -78,6 +84,8 @@ public class TerytBatchConfiguration {
                 .names(new String[]{"woj", "pow", "gmi", "rodzGmi", "rm", "mz", "nazwa", "sym", "sympod", "stanNa" })
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<Simc>() {{
                     setTargetType(Simc.class);
+                    setCustomEditors(Collections.singletonMap(String.class,
+                            new StringTrimmerEditor(true)));
                 }})
                 .build();
     }
@@ -105,7 +113,7 @@ public class TerytBatchConfiguration {
     @Bean
     public Step importUlic(JpaItemWriter<Teryt>  terytWriter) {
         return stepBuilderFactory.get("importUlicStep")
-                .<Teryt, Teryt> chunk(10)
+                .<Teryt, Teryt> chunk(10000)
                 .reader(ulicReader())
                 .faultTolerant()
                 .skip(IncorrectTokenCountException.class).skip(FlatFileParseException.class).skipLimit(10)
@@ -116,8 +124,9 @@ public class TerytBatchConfiguration {
     @Bean
     public Step importTerc(JpaItemWriter<Teryt>  terytWriter) {
         return stepBuilderFactory.get("importTercStep")
-                .<Teryt, Teryt> chunk(10)
+                .<Terc, Terc> chunk(10000)
                 .reader(tercReader())
+                //.processor(new TercItemProcessor())
                 .faultTolerant()
                 .skip(IncorrectTokenCountException.class).skip(FlatFileParseException.class).skipLimit(10)
                 .writer(terytWriter)
@@ -127,7 +136,7 @@ public class TerytBatchConfiguration {
     @Bean
     public Step importSimc(JpaItemWriter<Teryt>  terytWriter) {
         return stepBuilderFactory.get("importSimcStep")
-                .<Teryt, Teryt> chunk(10)
+                .<Teryt, Teryt> chunk(10000)
                 .reader(simcReader())
                 .faultTolerant()
                 .skip(IncorrectTokenCountException.class).skip(FlatFileParseException.class).skipLimit(10)
